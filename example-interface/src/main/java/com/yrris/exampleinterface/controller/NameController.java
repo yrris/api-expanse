@@ -1,7 +1,7 @@
 package com.yrris.exampleinterface.controller;
 
-import com.yrris.exampleinterface.model.User;
-import com.yrris.exampleinterface.utils.SignUtil;
+import com.yrris.apiexpansesdk.model.User;
+import com.yrris.apiexpansesdk.utils.SignUtil;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;

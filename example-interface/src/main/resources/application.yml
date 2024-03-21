@@ -2,3 +2,8 @@ server:
   servlet:
     context-path: /api
   port: 8081
+
+api-expanse:
+  client:
+    access-key: root
+    secret-key: 123456
