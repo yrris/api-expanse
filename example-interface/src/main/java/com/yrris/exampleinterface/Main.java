@@ -7,12 +7,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Main {
     public static void main(String[] args) {
-            ApiExpanseClient yuApiClient = new ApiExpanseClient();
-            String result1 = yuApiClient.getNameByGet("java");
-            String result2 = yuApiClient.getNameByPost("go");
+            String accessKey = "root";
+            String secretKey = "123456";
+            ApiExpanseClient client = new ApiExpanseClient(accessKey,secretKey);
+            String result1 = client.getNameByGet("java");
+            String result2 = client.getNameByPost("go");
             User user = new User();
             user.setUserName("yrris");
-            String result3 = yuApiClient.getUserNameByPost(user);
+            String result3 = client.getUserNameByPost(user);
             log.info(result1);
             log.info(result2);
             log.info(result3);
