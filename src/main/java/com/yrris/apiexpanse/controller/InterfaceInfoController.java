@@ -2,10 +2,7 @@ package com.yrris.apiexpanse.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yrris.apiexpanse.annotation.AuthCheck;
-import com.yrris.apiexpanse.common.BaseResponse;
-import com.yrris.apiexpanse.common.DeleteRequest;
-import com.yrris.apiexpanse.common.ErrorCode;
-import com.yrris.apiexpanse.common.ResultUtils;
+import com.yrris.apiexpanse.common.*;
 import com.yrris.apiexpanse.constant.UserConstant;
 import com.yrris.apiexpanse.exception.BusinessException;
 import com.yrris.apiexpanse.exception.ThrowUtils;
@@ -14,10 +11,13 @@ import com.yrris.apiexpanse.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
 import com.yrris.apiexpanse.model.dto.interfaceinfo.InterfaceInfoUpdateRequest;
 import com.yrris.apiexpanse.model.entity.InterfaceInfo;
 import com.yrris.apiexpanse.model.entity.User;
+import com.yrris.apiexpanse.model.enums.InterfaceInfoStatusEnum;
 import com.yrris.apiexpanse.model.vo.InterfaceInfoVO;
 import com.yrris.apiexpanse.service.InterfaceInfoService;
 import com.yrris.apiexpanse.service.UserService;
+import com.yrris.apiexpansesdk.client.ApiExpanseClient;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,13 +38,18 @@ public class InterfaceInfoController {
     @Resource
     private UserService userService;
 
+    //引入客户端实例
+    @Resource
+    private ApiExpanseClient apiExpanseClient;
+
+
     // region 增删改查
 
     /**
      * 创建
      *
      * @param interfaceInfoAddRequest 创建接口请求
-     * @param request 请求信息
+     * @param request                 请求信息
      * @return 接口id
      */
     @PostMapping("/add")
@@ -67,7 +72,7 @@ public class InterfaceInfoController {
      * 删除
      *
      * @param deleteRequest 删除接口请求
-     * @param request 请求信息
+     * @param request       请求信息
      * @return 是否删除成功
      */
     @PostMapping("/delete")
@@ -112,6 +117,66 @@ public class InterfaceInfoController {
         return ResultUtils.success(result);
     }
 
+    /**
+     * 发布接口（仅管理员）
+     *
+     * @param idRequest 接口id封装
+     * @return 是否成功
+     */
+    @PostMapping("/online")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> onlineInterfaceInfo(@RequestBody IdRequest idRequest) {
+        if (idRequest == null || idRequest.getId() <= 0) {
+            // 请求参数错误
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        //1.检验接口是否存在
+        Long id = idRequest.getId();
+        InterfaceInfo interfaceInfo = interfaceInfoService.getById(id);
+        if (interfaceInfo == null) {
+            //请求接口数据不存在
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+        //2.检查接口是否为可调用状态
+        // note 此时简单模拟测试接口连接状态 需要启动示例接口项目
+        com.yrris.apiexpansesdk.model.User user = new com.yrris.apiexpansesdk.model.User();
+        user.setUserName("root");
+        String userNameByPost = apiExpanseClient.getUserNameByPost(user);
+        if (StringUtils.isBlank(userNameByPost)) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口验证失败");
+        }
+        //3.修改接口信息为开启状态（status = 1）
+        interfaceInfo.setStatus(InterfaceInfoStatusEnum.ONLINE.getValue());
+        boolean result = interfaceInfoService.updateById(interfaceInfo);
+        return ResultUtils.success(result);
+    }
+
+    /**
+     * 下线接口（仅管理员）
+     *
+     * @param idRequest 接口id封装
+     * @return 是否成功
+     */
+    @PostMapping("/offline")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> offlineInterfaceInfo(@RequestBody IdRequest idRequest) {
+        if (idRequest == null || idRequest.getId() <= 0) {
+            // 请求参数错误
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        //1.检验接口是否存在
+        Long id = idRequest.getId();
+        InterfaceInfo interfaceInfo = interfaceInfoService.getById(id);
+        if (interfaceInfo == null) {
+            //请求接口数据不存在
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+        //2.修改接口信息为关闭状态（status = 0）
+        interfaceInfo.setStatus(InterfaceInfoStatusEnum.OFFLINE.getValue());
+        boolean result = interfaceInfoService.updateById(interfaceInfo);
+        return ResultUtils.success(result);
+    }
+
 
     /**
      * 根据 id 获取
@@ -151,7 +216,7 @@ public class InterfaceInfoController {
      * 分页获取列表（封装类）
      *
      * @param interfaceInfoQueryRequest 查询接口请求
-     * @param request 请求信息
+     * @param request                   请求信息
      * @return 接口视图分页
      */
     @PostMapping("/list/page/vo")
