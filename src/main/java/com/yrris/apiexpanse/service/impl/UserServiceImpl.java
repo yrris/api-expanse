@@ -1,6 +1,8 @@
 package com.yrris.apiexpanse.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.RandomUtil;
+import cn.hutool.crypto.digest.DigestUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yrris.apiexpanse.common.ErrorCode;
@@ -23,6 +25,7 @@ import org.springframework.util.DigestUtils;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 import static com.yrris.apiexpanse.constant.UserConstant.USER_LOGIN_STATE;
@@ -65,10 +68,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
             // 2. 加密
             String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
-            // 3. 插入数据
+            // 3. 分配accessKey 和secretKey
+            //使用 md5和用户账号名称 + 账号 + 密码长度为随机字符串生成签名的公钥和私钥
+            String accessKey = DigestUtil.md5Hex(SALT + userAccount + RandomUtil.randomString(userAccount.length()));
+            String secretKey = DigestUtil.md5Hex(SALT + userAccount + RandomUtil.randomString(userPassword.length()));
+            // 4. 插入数据
             User user = new User();
             user.setUserAccount(userAccount);
             user.setUserPassword(encryptPassword);
+            user.setAccessKey(accessKey);
+            user.setSecretKey(secretKey);
             boolean saveResult = this.save(user);
             if (!saveResult) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");

@@ -1,12 +1,14 @@
 package com.yrris.apiexpanse.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.google.gson.Gson;
 import com.yrris.apiexpanse.annotation.AuthCheck;
 import com.yrris.apiexpanse.common.*;
 import com.yrris.apiexpanse.constant.UserConstant;
 import com.yrris.apiexpanse.exception.BusinessException;
 import com.yrris.apiexpanse.exception.ThrowUtils;
 import com.yrris.apiexpanse.model.dto.interfaceinfo.InterfaceInfoAddRequest;
+import com.yrris.apiexpanse.model.dto.interfaceinfo.InterfaceInfoCallRequest;
 import com.yrris.apiexpanse.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
 import com.yrris.apiexpanse.model.dto.interfaceinfo.InterfaceInfoUpdateRequest;
 import com.yrris.apiexpanse.model.entity.InterfaceInfo;
@@ -138,7 +140,7 @@ public class InterfaceInfoController {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
         //2.检查接口是否为可调用状态
-        // note 此时简单模拟测试接口连接状态 需要启动示例接口项目
+        // fixme 此时简单模拟测试接口连接状态 需要启动示例接口项目
         com.yrris.apiexpansesdk.model.User user = new com.yrris.apiexpansesdk.model.User();
         user.setUserName("root");
         String userNameByPost = apiExpanseClient.getUserNameByPost(user);
@@ -175,6 +177,42 @@ public class InterfaceInfoController {
         interfaceInfo.setStatus(InterfaceInfoStatusEnum.OFFLINE.getValue());
         boolean result = interfaceInfoService.updateById(interfaceInfo);
         return ResultUtils.success(result);
+    }
+
+    /**
+     * 用户调用接口
+     *
+     * @param apiCallRequest 接口调用请求
+     * @return 是否成功
+     */
+    @PostMapping("/call")
+    public BaseResponse<Object> callInterfaceInfo(@RequestBody InterfaceInfoCallRequest apiCallRequest,HttpServletRequest request) {
+        if (apiCallRequest == null || apiCallRequest.getId()<=0) {
+            // 请求参数错误
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        //1.检验接口是否存在
+        Long id = apiCallRequest.getId();
+        InterfaceInfo interfaceInfo = interfaceInfoService.getById(id);
+        if (interfaceInfo == null) {
+            //请求接口数据不存在
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+        //2.检查接口是否为下线状态
+        if(interfaceInfo.getStatus() == InterfaceInfoStatusEnum.OFFLINE.getValue()){
+            throw new BusinessException(ErrorCode.OPERATION_ERROR,"当前接口下线，请稍后重试！");
+        }
+        //获取用户请求参数
+        String userRequestParams = apiCallRequest.getUserRequestParams();
+        //获取当前登录用户和签名
+        User loginUser = userService.getLoginUser(request);
+        String accessKey = loginUser.getAccessKey();
+        String secretKey = loginUser.getSecretKey();
+        //3.使用当前登录用户的认证签名进行接口调用
+        ApiExpanseClient apiClient = new ApiExpanseClient(accessKey, secretKey);
+        Gson gson =new Gson();
+        com.yrris.apiexpansesdk.model.User user = gson.fromJson(userRequestParams, com.yrris.apiexpansesdk.model.User.class);
+        return ResultUtils.success(apiClient.getUserNameByPost(user));
     }
 
 
