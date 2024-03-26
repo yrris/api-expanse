@@ -32,7 +32,7 @@ public class NameController {
 
         // 校验
         // todo 在数据库中查询是否分配给用户
-        if (!accessKey.equals("root")) {
+        if (!accessKey.equals("peter")) {
             throw new RuntimeException("无权限!");
 
         }
@@ -49,7 +49,7 @@ public class NameController {
         }
 
         // todo 从数据库中通过获取到的 accessKey 查询出 secretKey
-        String serverSign = SignUtil.genSign(body, "123456");
+        String serverSign = SignUtil.genSign(body, "12345678");
         if (!sign.equals(serverSign)) {
             throw new RuntimeException("无权限!");
         }

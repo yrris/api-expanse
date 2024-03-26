@@ -16,6 +16,7 @@ import com.yrris.apiexpanse.model.entity.User;
 import com.yrris.apiexpanse.model.enums.InterfaceInfoStatusEnum;
 import com.yrris.apiexpanse.model.vo.InterfaceInfoVO;
 import com.yrris.apiexpanse.service.InterfaceInfoService;
+import com.yrris.apiexpanse.service.UserInterfaceInfoService;
 import com.yrris.apiexpanse.service.UserService;
 import com.yrris.apiexpansesdk.client.ApiExpanseClient;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,9 @@ public class InterfaceInfoController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private UserInterfaceInfoService userInterfaceInfoService;
 
     //引入客户端实例
     @Resource
@@ -192,8 +196,8 @@ public class InterfaceInfoController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         //1.检验接口是否存在
-        Long id = apiCallRequest.getId();
-        InterfaceInfo interfaceInfo = interfaceInfoService.getById(id);
+        Long interfaceInfoId = apiCallRequest.getId();
+        InterfaceInfo interfaceInfo = interfaceInfoService.getById(interfaceInfoId);
         if (interfaceInfo == null) {
             //请求接口数据不存在
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
@@ -212,7 +216,9 @@ public class InterfaceInfoController {
         ApiExpanseClient apiClient = new ApiExpanseClient(accessKey, secretKey);
         Gson gson =new Gson();
         com.yrris.apiexpansesdk.model.User user = gson.fromJson(userRequestParams, com.yrris.apiexpansesdk.model.User.class);
-        return ResultUtils.success(apiClient.getUserNameByPost(user));
+        String result =apiClient.getUserNameByPost(user);
+        userInterfaceInfoService.callCount(loginUser.getId(),interfaceInfoId);
+        return ResultUtils.success(result);
     }
 
 
