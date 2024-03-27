@@ -16,6 +16,8 @@ import java.util.Map;
  */
 public class ApiExpanseClient {
 
+    private static final String GATEWAY_HOST ="http://localhost:9099";
+
     private String accessKey;
     private String secretKey;
 
@@ -44,7 +46,7 @@ public class ApiExpanseClient {
         // 将"name"参数添加到映射中
         paramMap.put("name", name);
         // 使用HttpUtil工具发起GET请求，并获取服务器返回的结果
-        String result= HttpUtil.get("http://localhost:8081/api/name/", paramMap);
+        String result= HttpUtil.get(GATEWAY_HOST+"/api/name/", paramMap);
         // 打印服务器返回的结果
         System.out.println(result);
         // 返回服务器返回的结果
@@ -55,7 +57,7 @@ public class ApiExpanseClient {
     public String getNameByPost( String name) {
         HashMap<String, Object> paramMap = new HashMap<>();
         paramMap.put("name", name);
-        String result= HttpUtil.post("http://localhost:8081/api/name/", paramMap);
+        String result= HttpUtil.post(GATEWAY_HOST+"/api/name/", paramMap);
         System.out.println(result);
         return result;
     }
@@ -65,7 +67,7 @@ public class ApiExpanseClient {
         // 将User对象转换为JSON字符串
         String json = JSONUtil.toJsonStr(user);
         // 使用HttpRequest工具发起POST请求，并获取服务器的响应
-        HttpResponse httpResponse = HttpRequest.post("http://localhost:8081/api/name/user")
+        HttpResponse httpResponse = HttpRequest.post(GATEWAY_HOST+"/api/name/user")
                 .addHeaders(getHeaderMap(json)) // 添加请求头
                 .body(json) // 将JSON字符串设置为请求体
                 .execute(); // 执行请求
