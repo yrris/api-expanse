@@ -217,7 +217,8 @@ public class InterfaceInfoController {
         Gson gson =new Gson();
         com.yrris.apiexpansesdk.model.User user = gson.fromJson(userRequestParams, com.yrris.apiexpansesdk.model.User.class);
         String result =apiClient.getUserNameByPost(user);
-        userInterfaceInfoService.callCount(loginUser.getId(),interfaceInfoId);
+        //在网关获取接口响应信息并进行统一的接口调用次数统计
+//        userInterfaceInfoService.callCount(loginUser.getId(),interfaceInfoId);
         return ResultUtils.success(result);
     }
 

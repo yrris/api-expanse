@@ -70,6 +70,10 @@ public class InterfaceInfoVO implements Serializable {
      */
     private Date updateTime;
 
+    /**
+     * 接口总调用次数
+     */
+    private Integer totalNum;
 
     /**
      * 包装类转对象

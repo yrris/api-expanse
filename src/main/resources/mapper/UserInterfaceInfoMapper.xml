@@ -1,20 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.yrris.project.mapper.UserInterfaceInfoMapper">
-  <resultMap id="BaseResultMap" type="com.yrris.project.model.entity.UserInterfaceInfo">
-    <!--@Table user_interface_info-->
-    <id column="id" jdbcType="BIGINT" property="id" />
-    <result column="userId" jdbcType="BIGINT" property="userid" />
-    <result column="interfaceInfoId" jdbcType="BIGINT" property="interfaceinfoid" />
-    <result column="totalNum" jdbcType="INTEGER" property="totalnum" />
-    <result column="leftNum" jdbcType="INTEGER" property="leftnum" />
-    <result column="status" jdbcType="INTEGER" property="status" />
-    <result column="createTime" jdbcType="TIMESTAMP" property="createtime" />
-    <result column="updateTime" jdbcType="TIMESTAMP" property="updatetime" />
-    <result column="isDelete" jdbcType="TINYINT" property="isdelete" />
-  </resultMap>
-  <sql id="Base_Column_List">
-    id, userId, interfaceInfoId, totalNum, leftNum, `status`, createTime, updateTime, 
-    isDelete
-  </sql>
+    <resultMap id="BaseResultMap" type="com.yrris.project.model.entity.UserInterfaceInfo">
+        <!--@Table user_interface_info-->
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="userId" jdbcType="BIGINT" property="userId"/>
+        <result column="interfaceInfoId" jdbcType="BIGINT" property="interfaceInfoId"/>
+        <result column="totalNum" jdbcType="INTEGER" property="totalNum"/>
+        <result column="leftNum" jdbcType="INTEGER" property="leftNum"/>
+        <result column="status" jdbcType="INTEGER" property="status"/>
+        <result column="createTime" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="updateTime" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="isDelete" jdbcType="TINYINT" property="isDelete"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id,
+        userId,
+        interfaceInfoId,
+        totalNum,
+        leftNum,
+        `status`,
+        createTime,
+        updateTime,
+        isDelete
+    </sql>
+
+    <select id="listTopNumInterfaceInfo" resultMap="BaseResultMap">
+        select interfaceInfoId, sum(totalNum) as totalNum
+        from user_interface_info
+        group by interfaceInfoId
+        order by totalNum desc
+        limit #{limit}
+    </select>
 </mapper>
